@@ -1,4 +1,5 @@
-# numerical and analytic approximation for the solution of ODE
+# Numerical and analytical approximations for solving an ODE
+- rewritting paper: SCN.pdf
 
 MATLAB code for the numerical solution of the nonlinear boundary-value problem
 
