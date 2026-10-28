@@ -25,7 +25,7 @@ figure5A
 A lightweight interface test is available:
 
 ```matlab
-run('tests/smokeTest.m')
+run('tests/Test.m')
 ```
 
 
