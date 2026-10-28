@@ -1,20 +1,58 @@
-# Numerical and analytical approximations for solving an ODE
-- **rewritting paper: SCN.pdf**
+# Reproducing paper
 
-MATLAB code for the numerical solution of the nonlinear boundary-value problem
+Reproducing paper:  SCN.pdf.
 
-    b'' + (2/r) b' - (1/λ)(b - 1)(ν b + η) - b/(λ r) = 0,    0 < r < ∞,
-    b(r) → 1  as  r → ∞,
+The repository contains 7 independent figure sets. Shared numerics, closed-form approximations, error measures and plotting helpers live in the
+MATLAB package [`+buffer`](+buffer/), so the figure scripts only contain parameters, calls and plot configuration.
 
-and for the closed-form approximations studied in the paper.
+## Requirements
 
-## Figures
+- MATLAB
+- Optimization Toolbox (`fsolve`)
 
-| # | Folder | What it shows | Scripts |
-|---|--------|---------------|---------|
-| 1 | `Figure1/` | b(r) profiles and analytical approximations, 3 parameter sets | `fig1a.m`, `fig1b.m`, `fig1c.m` |
-| 2 | `Figure2/` | log10 of the r-averaged error vs ν, λ = 0.02 / 2 / 20 | `Simple_*_Fig2_A/B/C.m` |
-| 3 | `Figure3/` | b(r) vs approximations for the Figure-1 cases | `simple_buffer_case_Fig3_A/B/C.m` |
-| 4 | `Figure4/` | error comparison incl. ExpVar / ExpGlobal / DblExpVar / DblExpGlobal | `simple_buffer_case_Fig4_A/B/C.m` |
-| 5 | `Figure5/` | same comparison for the concentration c(r) | `simple_buffer_case_Fig5_A/B/C.m` |
-| 6 | `Figure6/` | best-approximation maps over (λ, ν) | `simple_buffer_case_Fig6_*.m` |
+## Quick start
+
+Open this folder in MATLAB, then run one of the figure scripts:
+
+```matlab
+figure1A
+figure2A
+figure3A
+figure4A
+figure5A
+```
+
+A lightweight interface test is available:
+
+```matlab
+run('tests/smokeTest.m')
+```
+
+
+
+## API
+
+All helpers are called with the `buffer.` namespace.
+
+| Function | Purpose |
+| --- | --- |
+| `buffer.solveUniform` | Newton solver on a uniform grid (Figures 1 and 3) |
+| `buffer.solveGeometric` | Newton solver with relaxation on a geometric grid (Figures 2, 4 and 5) |
+| `buffer.residualJacobianUniform` | Residual and exact Jacobian for the uniform solver |
+| `buffer.residualGeometric`, `buffer.jacobianGeometric` | Residual and Jacobian for the geometric solver |
+| `buffer.geometricGrid` | Geometric grid and local spacings |
+| `buffer.initialProfile` | Piecewise small-r/far-field starting profile |
+| `buffer.expansion`, `buffer.farField` | Small-r and truncated far-field expansions |
+| `buffer.approximations` | Evaluate a selected set of closed-form approximations |
+| `buffer.pade1`, `buffer.pade2`, `buffer.rba2`, `buffer.expSeries`, `buffer.expPade`, `buffer.doubleExpSeries`, `buffer.doubleExpVariant` | Individual approximations |
+| `buffer.chargeDensity`, `buffer.meanError` | Figure 5 charge density and radial error mean |
+| `buffer.plotProfiles`, `buffer.plotErrors`, `buffer.palette` | Shared plotting helpers |
+| `buffer.generateB0` | Regenerate `b0(nu)` data with BVP5C |
+| `buffer.ode`, `buffer.bc`, `buffer.guess` | BVP5C interface used by `generateB0` |
+
+
+
+## Code Structure and AI Assistance
+
+The current code framework was generated with the assistance of `DeepSeek-V4.1-flash 1017`. For reference, the original handwritten implementation is available in the `original/` directory.
+
