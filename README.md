@@ -1,9 +1,7 @@
-# Reprodue paper
+# Paper Peproduction
 
-Reproducing paper:  SCN.pdf.
-
-The repository contains 7 independent figure sets. Shared numerics, closed-form approximations, error measures and plotting helpers live in the
-MATLAB package [`+buffer`](+buffer/), so the figure scripts only contain parameters, calls and plot configuration.
+- paper:  SCN.pdf.
+  - The repository contains 7 independent figure sets. Shared numerics, closed-form approximations, error measures and plotting helpers live in the MATLAB package [`+buffer`](+buffer/), so the figure scripts only contain parameters, calls and plot configuration.
 
 ## Requirements
 
