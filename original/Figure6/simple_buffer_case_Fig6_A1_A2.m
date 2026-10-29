@@ -1,7 +1,7 @@
 clear,clc;
 eta = 1;
-N          = 800; %100 点数值精度不够
-N1       = 100;
+N  = 800; % 100 点数值精度不够
+N1 = 100;
 lambda_vec = logspace(-3,2,N1)';
 nu_vec = logspace(-3, 2, N1)';
   
@@ -19,16 +19,15 @@ alpha_r = 10^(5/N);                 % r_{k+1}/r_k = alpha_r
 h_L = r_vec .* (1 - 1/alpha_r);    % left-step  h^- = r_k - r_{k-1},  N×1
 h_R = r_vec .* (alpha_r - 1);      % right-step h^+ = r_{k+1} - r_k,  N×1
 
-%% shooting method
-% temp  = load("b0_2D_.mat");
-temp  = load("b0_Fig6_A1A2.mat");
-b_r0  = temp.b0;  
 NLAM = numel(lambda_vec);
 NNU  = numel(nu_vec);
 LAM  = reshape(lambda_vec, 1, NLAM);     % 1 x Nlam
 
 b_num = zeros(N,NLAM, NNU);
 res_l = zeros(NLAM, NNU);
+%% shooting method
+temp  = load("b0_Fig6.mat");
+b_r0  = temp.b0;  
 
 for j = 1:NNU
     nu  = nu_vec(j);
@@ -50,9 +49,10 @@ for j = 1:NNU
     msk = r_vec < rsw;                   
     b   = double(msk).*b_frob + double(~msk).*b_asymp;
 
-    % Newton：
+    %  Newton: lambda 也参与迭代，收敛判据用"相对步长"而不是残差
     xtol = 1e-12;
     it = 0;
+    
     for it = 1:max_iter
         F   = compute_F(b0j, b, r_vec, h_L, h_R, LAM, nu, eta);
         res = max(abs(F), [], 1);                 % 1 x Nlam
@@ -82,6 +82,7 @@ for j = 1:NNU
     fprintf('nu = %.3e 完成：Newton %2d 步，max|F| = %.2e，最大相对步长 %.1e\n', ...
             nu, it, max(res_l(:,j)), max(stp));
 end
+save('b_num_Fig6_A1A2.mat',"b_num");
 %% 解析近似：Padé 2 
 
 LAM = reshape(lambda_vec(:), 1, [], 1);     
@@ -122,6 +123,7 @@ cu   = Pc_G.^(1/3);
 B2 = real((QV./Pc_R).*(Pc_Q + cu + Pc_H./cu));
 B1 = (1./Pc_V).*(((B2.*(B2.*Pc_R - 3.*QV.*Pc_K))./(6*LAM.*QV.^2)) - Pc_J);
 
+% 修正pade2 出来的数值
 for itP = 1:40
     fP1 = 2*LAM.*B1.^2 + B1.*B2 - B2.^2./QV ...
         - 2*LAM.*QV.^2.*B1 - (QV.^2 + 2*LAM).*B2;
@@ -215,7 +217,7 @@ pk   = [1/2 + (sqrt(3)/2)*1i;  1/2 - (sqrt(3)/2)*1i;  -1];
 Cbrt = (sqrt(complex(F_Dbl_Exp_Var.^2 - E_Dbl_Exp_Var.^3)) ...
         + F_Dbl_Exp_Var).^(1/3);
 
-AL3 = zeros(3, numel(lambda_vec), numel(nu_vec));      % 3 × Nlam × Nnu
+AL3 = zeros(3, numel(lambda_vec), numel(nu_vec));     
 for k = 1:3
     Gk = pk(k) * Cbrt;
     AL3(k,:,:) = reshape((Q_Dbl_Exp_Var - Gk - E_Dbl_Exp_Var./Gk) ...
@@ -224,7 +226,7 @@ end
 
 
 ALr   = reshape(AL3, 3, []);
-b0_3d = 1 - QV.*AL3 + 0.5*eta*QV.^3.*AL3.^2;    % 注意这里用 q，不是系数 Q
+b0_3d = 1 - QV.*AL3 + 0.5*eta*QV.^3.*AL3.^2;   
 b0r   = reshape(b0_3d, 3, []);
 
 ok = abs(imag(ALr)) < 1e-10*max(1,abs(ALr)) & real(ALr) > 0 ...
@@ -233,11 +235,11 @@ ok = abs(imag(ALr)) < 1e-10*max(1,abs(ALr)) & real(ALr) > 0 ...
 score = real(ALr);  score(~ok) = Inf;
 [best1, kb] = min(score, [], 1);
 
-score2 = real(ALr); score2(real(ALr) <= 0) = Inf;     % 退化：取正实部里最小
+score2 = real(ALr); score2(real(ALr) <= 0) = Inf;     
 [best2, kb2] = min(score2, [], 1);
 need1 = ~isfinite(best1);  kb(need1) = kb2(need1);
 
-need2 = ~isfinite(best1) & ~isfinite(best2);          % 再退化：取实部最大
+need2 = ~isfinite(best1) & ~isfinite(best2);          
 if any(need2), [~, kb3] = max(real(ALr), [], 1); kb(need2) = kb3(need2); end
 
 ALPHA_Dbl_Exp_Var = reshape(ALr(sub2ind(size(ALr), kb, 1:size(ALr,2))), ...
@@ -248,8 +250,6 @@ DblExpVar = 1 + QV.*((exp(-ALPHA_Dbl_Exp_Var.*RV) - 1)./RV) ...
           - (QV.^3)*eta.*((exp(-ALPHA_Dbl_Exp_Var.*RV) ...
              .*(1 + ALPHA_Dbl_Exp_Var.*RV) - 1)./RV.^2);
 %% DblExp-Global
-
-
 RV  = reshape(r_vec(:),      [], 1, 1);   
 LAM = reshape(lambda_vec(:), 1, [], 1);  
 NU  = reshape(nu_vec(:),     1, 1, []);   
@@ -284,7 +284,7 @@ S_expglobal     = log(3/2) + QV*eta*log(4/3);
 alpha_expglobal = (sqrt(S_expglobal.^2 + LAM./QV) - S_expglobal)./LAM;
 
 ExpGlobal = 1 + QV.*((exp(-alpha_expglobal.*RV) - 1)./RV);
-%% 最优方法编号
+%%  最优方法编号
 methods = {'Pade2', 'RBA2','Exp-Pade',  'Dbl-ExpGlobal','ExpGlobal'};
 B       = {b_Pade2, b_RBA2, b_exp_pade,  DblExpGlobal, ExpGlobal};
 
@@ -303,10 +303,10 @@ for i = 1:nM
     else
         D = abs(A - b_num);
     end
-    E(:,:,i) = reshape(mean(D, 1), Nlam, Nnu); 
+    E(:,:,i) = reshape(mean(D, 1), Nlam, Nnu);   % 沿 r 求平均
 end
-
-[Emin, winner] = min(E, [], 3); 
+% 逐格取最小，记录编号
+[Emin, winner] = min(E, [], 3);   % 沿方法取最小
 
 methods = {'Pade2', 'RBA2', 'Exp-Pade','DblExp-Global','Exp-Global'};
 nameList = {'Pade2', 'RBA2','Exp-Pade',  'DblExp-Global','Exp-Global'};
@@ -329,11 +329,12 @@ for i = 1:nM
     end
 end
 
-% 0（全 NaN）:浅灰白
+% 0（全 NaN）: 浅灰白
 NaNcol = [0.97 0.97 0.97];
 cmapFull = [cmap; NaNcol];
 
 W = winner;
+%W(W == 0) = nM + 1;          % 把 0 挪到最后一格
 %% ---- 画图 ----
 figure('Color','w','Position',[100 100 720 560]);
 imagesc(nu_vec, lambda_vec, W);     
@@ -352,21 +353,16 @@ cb.FontSize   = 9;
 box on;
 exportgraphics(gcf, 'winner_map.png', 'Resolution', 160);
 fprintf('已保存 winner_map.png\n');
-
-%% alpha 复/实边界
+%%  alpha 复/实边界
 % 行 = lambda，列 = nu
 
-% DblExp-Var
+% DblExp-Var 
 A_v = eta * (QV.^2) .* P_Dbl_Exp_Var;
 B_v = -Q_Dbl_Exp_Var;
 C_v = -R_Dbl_Exp_Var;
 D_v = 1 ./ QV;
 
-Delta_v = 18*A_v.*B_v.*C_v.*D_v ...
-        - 4*B_v.^3.*D_v ...
-        + B_v.^2.*C_v.^2 ...
-        - 4*A_v.*C_v.^3 ...
-        - 27*A_v.^2.*D_v.^2;
+Delta_v = 18*A_v.*B_v.*C_v.*D_v - 4*B_v.^3.*D_v + B_v.^2.*C_v.^2 - 4*A_v.*C_v.^3 - 27*A_v.^2.*D_v.^2;
 
 Delta_v = reshape(Delta_v, Nlam, Nnu);
 s_v = max(abs(Delta_v(:)));
@@ -374,17 +370,13 @@ if s_v > 0
     Delta_v = Delta_v / s_v;
 end
 
-% DblExp-Global
+% DblExp-Global 
 A_g = eta * (QV.^2) .* P_Dbl_Exp_Global;
 B_g = -Q_Dbl_Exp_Global;
 C_g = -R_Dbl_Exp_Global;
 D_g = 1 ./ QV;
 
-Delta_g = 18*A_g.*B_g.*C_g.*D_g ...
-        - 4*B_g.^3.*D_g ...
-        + B_g.^2.*C_g.^2 ...
-        - 4*A_g.*C_g.^3 ...
-        - 27*A_g.^2.*D_g.^2;
+Delta_g = 18*A_g.*B_g.*C_g.*D_g - 4*B_g.^3.*D_g + B_g.^2.*C_g.^2 - 4*A_g.*C_g.^3 - 27*A_g.^2.*D_g.^2;
 
 Delta_g = reshape(Delta_g, Nlam, Nnu);
 s_g = max(abs(Delta_g(:)));
@@ -408,17 +400,13 @@ if any(Delta_g(:) < 0) && any(Delta_g(:) > 0)
             'LineColor', [0.85 0.65 0.00], 'LineWidth', 1.0);
 end
 hold(ax, 'off');
-
 %%
 grayscale = log10(Emin);
 [X,Y] = meshgrid(nu_vec,lambda_vec);
-Z = grayscale;
+Z = grayscale
 
 figure('Color','w');
-
-contourf(nu_vec, lambda_vec, Z);
-hold on
-hold off
+contourf(nu_vec, lambda_vec, Z); 
 
 set(gca, 'XScale','log', 'YScale','log', ...
          'XLim',[1e-3 1e2], 'YLim',[1e-3 1e2], ...
@@ -426,11 +414,9 @@ set(gca, 'XScale','log', 'YScale','log', ...
          'XTickLabel',{'10^{-3}','10^{-2}','10^{-1}','10^0','10^1','10^2'}, ...
          'YTickLabel',{'10^{-3}','10^{-2}','10^{-1}','10^0','10^1','10^2'});
 
-colormap(bone);
-clim('auto');       
+colormap(bone); clim('auto');       
 
-cb = colorbar;
-cb.Ticks = -6:1:-2;
+cb = colorbar; cb.Ticks = -6:1:-2;
 
 xlabel('\nu'); ylabel('\lambda');
 title('log_{10}||b_{num}-b_{approx}||, \eta=1');
