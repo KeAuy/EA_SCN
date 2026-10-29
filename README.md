@@ -1,9 +1,11 @@
 # Paper Reproduction
 
 Reproduction of the figures of SCN.pdf. The repository contains seven independent figure sets; every panel is a standalone script that solves the buffer equation:
+
 $$
 \lambda \Delta b = (b - 1)(\nu b + \eta) + \frac{b}{\mathbf{r}}
 $$
+
 We use numerical method to test the  efficient of the approximation of solution. All output lands in `figures/`.
 ## Requirements
 
