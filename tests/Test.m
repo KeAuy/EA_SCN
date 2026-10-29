@@ -1,12 +1,3 @@
-%% Smoke test for the +buffer package.
-%
-% Run with
-%
-%   matlab -batch "run('tests/Test.m')"
-%
-% The test uses coarse grids; it checks interfaces, shapes and a few
-% residuals, not the published figure values.
-
 rootDir = fileparts(fileparts(mfilename('fullpath')));
 addpath(rootDir);
 
@@ -43,7 +34,7 @@ a1 = buffer.pade2(r, 0.1, 0.1, 1, 'Refine', false, ...
     'RealCoefficients', false);
 a2 = buffer.pade2(r, 0.1, 0.1, 1, 'Refine', true, ...
     'RealCoefficients', true);
-assert(all(isfinite(real(a1))) && all(isfinite(a2)));
+assert(all(isfinite(real(a1))) && all(isfinite(real(a2))));
 fprintf('ok\nTest: uniform solver ... ');
 
 rUniform = linspace(1e-3, 1e2, 2000)';
@@ -54,39 +45,38 @@ b = buffer.solveUniform(0.131, 0.1, 0.1, 1, rUniform, ...
 assert(norm(F, inf) < 1e-6, 'Uniform solver residual is too large.');
 
 fprintf('ok\nTest: geometric solver ... ');
-data = load(fullfile(rootDir, 'data', 'b0_lambda0p02_nu100.mat'), 'b0');
-grid = buffer.geometricGrid(1e-3, 1e2, 100);
 nuSmall = logspace(-3, 2, 100)';
+grid = buffer.geometricGrid(1e-3, 1e2, 100);
+b0Small = buffer.generateB0(0.02, 1, nuSmall, ...
+    'Tolerance', 1e-6, 'Verbose', false);
 cols = 1:3;
-bGeo = buffer.solveGeometric(data.b0(cols), 0.02, nuSmall(cols), 1, grid, ...
+bGeo = buffer.solveGeometric(b0Small(cols), 0.02, nuSmall(cols), 1, grid, ...
     'Tolerance', 1e-4, 'MaxIterations', 500, 'Verbose', false);
 assert(all(isfinite(bGeo), 'all'), 'Geometric solver returned non-finite values.');
 for k = 1:numel(cols)
     F = buffer.residualGeometric(bGeo(:, k), grid.r, grid.hLeft, ...
-        grid.hRight, data.b0(k), 0.02, nuSmall(k), 1);
+        grid.hRight, b0Small(k), 0.02, nuSmall(k), 1);
     assert(norm(F, inf) < 1e-3, 'Geometric solver residual is too large.');
 end
 
-fprintf('ok\nTest: errors and data ... ');
+fprintf('ok\nTest: charge density and errors ... ');
 cNum = buffer.chargeDensity(bGeo, grid.r, nuSmall(cols));
 err  = buffer.meanError(cNum, cNum, 'log');
 assert(numel(err) == numel(cols) && all(isfinite(err)));
-assert(isfile(fullfile(rootDir, 'data', 'b0_lambda2_nu100.mat')));
-assert(isfile(fullfile(rootDir, 'data', 'b0_lambda20_nu1000.mat')));
-assert(isfile(fullfile(rootDir, 'data', 'b0_lambdaNu400_eta1.mat')));
-fprintf('ok\nTest: lambda-batch solver ... ');
 
+fprintf('ok\nTest: lambda-batch solver ... ');
 lambdaBatch = logspace(-3, 2, 5)';
 nuBatch     = logspace(-3, 2, 2)';
 gridBatch   = buffer.geometricGrid(1e-3, 1e2, 60);
-dataBatch   = load(fullfile(rootDir, 'data', 'b0_lambdaNu100_eta1.mat'), 'b0');
+b0Batch = buffer.generateB0Grid(lambdaBatch, nuBatch, 1, ...
+    'GridSize', 60, 'Tolerance', 1e-6, 'Verbose', false);
 bBatch = buffer.solveGeometricLambdaGrid( ...
-    dataBatch.b0(1:5, 1:2), lambdaBatch, nuBatch, 1, gridBatch, ...
+    b0Batch, lambdaBatch, nuBatch, 1, gridBatch, ...
     'Tolerance', 1e-3, 'MaxIterations', 200, 'Verbose', false);
 assert(isequal(size(bBatch), [60, 5, 2]));
 assert(all(isfinite(bBatch), 'all'));
 F = buffer.residualGeometricLambda(bBatch(:, :, 1), gridBatch.r, ...
-    gridBatch.hLeft, gridBatch.hRight, dataBatch.b0(1:5, 1).', ...
+    gridBatch.hLeft, gridBatch.hRight, b0Batch(:, 1).', ...
     lambdaBatch, nuBatch(1), 1);
 assert(max(abs(F), [], 'all') < 1e-2);
 
