@@ -1,6 +1,8 @@
 # Paper Reproduction
 
-Reproduction of the figures of SCN.pdf. The repository contains seven independent figure sets; every panel is a standalone script that solves the buffer equation:
+Reproduction of the figures of SCN.pdf. 
+
+The repository contains seven independent figure sets; every panel is a standalone script that solves the buffer equation:
 
 $$
 \lambda \Delta b = (b - 1)(\nu b + \eta) + \frac{b}{\mathbf{r}}
