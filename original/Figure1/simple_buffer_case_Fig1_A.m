@@ -34,7 +34,7 @@ W = 12000 * lambda^5 ...
     - lambda^2 * q^3 * (243*p^6 - 810*p^5 + 609*p^4 + 210*p^3 - 21*p^2 - 240*p - 4) ...
     - 2 * lambda * eta * p * q^5 * (p-2) * (20*p^2 - 13*p - 1) ...
     + p^2 * eta^2 * q^7;
-% G 中 sqrt(-3 * q * W) 注意定义域，这里直接保留表达式
+% G 中 sqrt(-3 * q * W) 
 G = Q^3 + 2 * lambda * R * (3 * Q * F - 9 * lambda * E * R + V * sqrt(-3 * q * W));
 
 B2 = (q / R) * (Q + G^(1/3) + H / G^(1/3));
@@ -59,7 +59,7 @@ alpha_ExpPade = (1 / (2 * lambda)) * (H_ExpPade^(1/2) - Q_ExpPade + (2 * V_ExpPa
 beta_ExpPade = eta * q^3 / (q * alpha_ExpPade * (lambda * alpha_ExpPade + 1) - 1);
 
 %% 初始猜测：分段构造
-r_switch = 3.00;            % 切换点（可调）
+r_switch = 3.00;            % 切换点
 b_init = zeros(N,1);
 for i = 1:N
     ri = r(i);
@@ -75,16 +75,8 @@ for i = 1:N
     end
 end
 b = b_init;
-% % 可选：在 r_switch 附近做平滑连接（例如线性加权）
-% if r_switch > r_min && r_switch < R_max
-%     idx = find(r >= r_switch, 1, 'first');
-%     if idx > 1 && idx <= N
-%         w = (r(idx) - r_switch) / (r(idx) - r(idx-1));  % 实际上 r_switch 落在两节点间
-%         % 这里简化：直接取两节点的平均值，或不做平滑（作为初始猜测足够）
-%     end
-% end
 
-% 牛顿迭代参数
+% 牛顿迭代
 tol = 1e-8;
 max_iter = 25;
 
@@ -99,9 +91,7 @@ for iter = 1:max_iter
     end
 end
 %% RBA2
-% b_RPA 关于b的一元二次方程有两个根，大一点的是这个，带进去的话算出来是另一种不知意义的解
-%b_RPA = ((nu - eta - 1./r) + sqrt((eta - nu + 1./r).^2 + 4*nu*(eta + 1./r)))/(2*nu);
-% 最后将b_RPA换成了RBA
+
 b_RPA = 1 - 1/(2*q*nu)*(1+q./r - sqrt( (1+q./r).^2 - 4*nu*q^2./r ));
 RBA2 = b_RPA + 2*lambda*eta*( (1+r/q).^2 - 4*nu.*r ).^(-2);
 
@@ -125,10 +115,10 @@ syms alpha
 DbleExpSer = eta*q^2*P_dbl*alpha^3 - Q_dbl*alpha^2 - R_dbl*alpha + 1/q;
 DbleExpSer_coeff = [eta*q^2*P_dbl,-Q_dbl,-R_dbl,1/q];
 alpha_roots = roots(DbleExpSer_coeff);
-new_alpha = 1.2558+0.926i; %拿到alpha之后不取实部
+new_alpha = 1.2558+0.926i; 
 b_DbleExpSer0 = real(1-q*new_alpha + 1/2*q^3*new_alpha^2);
 
-b_funcform_2 = 1 + (q.*(exp(-new_alpha*r)-1))./r ...% 用functional form计算完之后再取实部
+b_funcform_2 = 1 + (q.*(exp(-new_alpha*r)-1))./r
     - q^3*eta.*((exp(-new_alpha*r).*(1+new_alpha*r)-1)./r.^2); 
 %% 绘图
 figure;
