@@ -13,7 +13,7 @@ We use numerical method to test the efficiency of the approximation. All output 
 
 - MATLAB (developed with R2022b)
 - Optimization Toolbox 
-- Parallel Computing Toolbox (optional; the `b0` grid of Figures 6/7 is built with `parfor` when it is available and falls back to a serial loop otherwise)
+- Parallel Computing Toolbox (optional; the `b0` grid of Figures 6/7 is built with `parfor`)
 
 ## Quick start
 
