@@ -1,4 +1,4 @@
-function b = pade2(r, lambda, nu, eta, options)
+function [b, B1, B2] = pade2(r, lambda, nu, eta, options)
 %PADE2 [2/2] Pade approximation of the buffer solution.
 %
 %   B = BUFFER.PADE2(R, LAMBDA, NU, ETA, OPTIONS) evaluates
@@ -22,6 +22,8 @@ arguments
     nu double
     eta (1,1) double
     options.Refine (1,1) logical = false
+    options.RefineMethod (1,:) char ...
+        {mustBeMember(options.RefineMethod, {'fsolve', 'newton'})} = 'fsolve'
     options.RealCoefficients (1,1) logical = true
 end
 
@@ -71,30 +73,61 @@ if options.Refine
             ./ (6 * lambda * q.^2) - cJ);
     B1guess = real(B1guess);
 
-    B1 = zeros(size(q));
-    B2 = zeros(size(q));
-    fsolveOptions = optimoptions('fsolve', 'Display', 'none', ...
-        'TolFun', 1e-14, 'TolX', 1e-14, 'MaxIterations', 500);
+    if strcmpi(options.RefineMethod, 'fsolve')
+        B1 = zeros(size(q));
+        B2 = zeros(size(q));
+        fsolveOptions = optimoptions('fsolve', 'Display', 'none', ...
+            'TolFun', 1e-14, 'TolX', 1e-14, 'MaxIterations', 500);
 
-    for i = 1:numel(q)
-        qj = q(i);
-        padeSystem = @(coef) [ ...
-            2 * lambda * coef(1)^2 + coef(1) * coef(2) - coef(2)^2 / qj ...
-            - 2 * lambda * qj^2 * coef(1) - (qj^2 + 2 * lambda) * coef(2);
-            (1 + qj) * coef(1)^2 - 2 * coef(1) * coef(2) / qj ...
-            + 2 * (3 * lambda - qj^3) * coef(1) + (1 - qj) * coef(2) ...
-            - qj^2 * (6 * lambda + qj^2 * (1 - qj))];
+        for i = 1:numel(q)
+            qj = q(i);
+            padeSystem = @(coef) [ ...
+                2 * lambda * coef(1)^2 + coef(1) * coef(2) - coef(2)^2 / qj ...
+                - 2 * lambda * qj^2 * coef(1) - (qj^2 + 2 * lambda) * coef(2);
+                (1 + qj) * coef(1)^2 - 2 * coef(1) * coef(2) / qj ...
+                + 2 * (3 * lambda - qj^3) * coef(1) + (1 - qj) * coef(2) ...
+                - qj^2 * (6 * lambda + qj^2 * (1 - qj))];
 
-        initialGuess = [B1guess(i); B2guess(i)];
-        [coef, ~, exitFlag] = fsolve(padeSystem, initialGuess, fsolveOptions);
+            initialGuess = [B1guess(i); B2guess(i)];
+            [coef, ~, exitFlag] = fsolve(padeSystem, initialGuess, fsolveOptions);
 
-        if exitFlag <= 0 && i > 1
-            initialGuess = [B1guess(i-1); B2guess(i-1)];
-            coef = fsolve(padeSystem, initialGuess, fsolveOptions);
+            if exitFlag <= 0 && i > 1
+                initialGuess = [B1guess(i-1); B2guess(i-1)];
+                coef = fsolve(padeSystem, initialGuess, fsolveOptions);
+            end
+
+            B1(i) = coef(1);
+            B2(i) = coef(2);
         end
+    else
+        % Vectorized Newton refinement over all nu columns.  This is the
+        % refinement used by the lambda-nu parameter-grid figures.
+        B1 = B1guess;
+        B2 = B2guess;
 
-        B1(i) = coef(1);
-        B2(i) = coef(2);
+        for itP = 1:40
+            fP1 = 2 * lambda * B1.^2 + B1 .* B2 - B2.^2 ./ q ...
+                  - 2 * lambda * q.^2 .* B1 ...
+                  - (q.^2 + 2 * lambda) .* B2;
+            fP2 = (1 + q) .* B1.^2 - 2 * B1 .* B2 ./ q ...
+                  + 2 * (3 * lambda - q.^3) .* B1 ...
+                  + (1 - q) .* B2 ...
+                  - q.^2 .* (6 * lambda + q.^2 .* (1 - q));
+            resP = max(abs([fP1(:); fP2(:)]));
+            if ~isfinite(resP) || resP < 1e-10
+                break;
+            end
+
+            jP11 = 4 * lambda .* B1 + B2 - 2 * lambda * q.^2;
+            jP12 = B1 - 2 * B2 ./ q - (q.^2 + 2 * lambda);
+            jP21 = 2 * (1 + q) .* B1 - 2 * B2 ./ q ...
+                   + 2 * (3 * lambda - q.^3);
+            jP22 = -2 * B1 ./ q + (1 - q);
+            detP = jP11 .* jP22 - jP12 .* jP21;
+
+            B1 = B1 + (-fP1 .* jP22 + fP2 .* jP12) ./ detP;
+            B2 = B2 + (-fP2 .* jP11 + fP1 .* jP21) ./ detP;
+        end
     end
 else
     B2 = B2raw;
