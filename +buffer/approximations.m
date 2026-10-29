@@ -27,6 +27,8 @@ arguments
     eta (1,1) double
     names = {}
     options.PadeRefine (1,1) logical = false
+    options.PadeRefineMethod (1,:) char ...
+        {mustBeMember(options.PadeRefineMethod, {'fsolve', 'newton'})} = 'fsolve'
     options.PadeRealCoefficients (1,1) logical = true
     options.RealBranchIndex (1,1) double {mustBeNonnegative} = 0
 end
@@ -54,6 +56,7 @@ for k = 1:numel(names)
         case 'pade2'
             approx.pade2 = buffer.pade2(r, lambda, nu, eta, ...
                 'Refine', options.PadeRefine, ...
+                'RefineMethod', options.PadeRefineMethod, ...
                 'RealCoefficients', options.PadeRealCoefficients);
         case 'rba2'
             approx.rba2 = buffer.rba2(r, lambda, nu, eta);
