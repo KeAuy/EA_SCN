@@ -74,7 +74,6 @@ for i = 1:N
     end
 end
 b = b_init;
-fprintf('max = %d, min=%d\n', max(b(:)),min(b(:)));
 
 tol = 1e-10;
 max_iter = 25;

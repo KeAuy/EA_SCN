@@ -1,6 +1,10 @@
 clear; clc;
-
-lambda = 20.0;
+%%
+% Fig2_A: lambda = 0.02, eta = 1.0
+% Fig2_B: lambda =    2, eta = 1.0
+% Fig2_C: lambda = 20.0, eta = 1.0
+%%
+lambda = 0.02;
 eta = 1;
 N = 100;
 
@@ -31,4 +35,4 @@ for k = 2:N
     fprintf('nu = %.3e completed\n', nu);
 end
 
-save('b0_Fig2_C.mat', 'b0');
+save('b0_Fig2_A.mat', 'b0');

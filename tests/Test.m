@@ -65,25 +65,25 @@ err  = buffer.meanError(cNum, cNum, 'log');
 assert(numel(err) == numel(cols) && all(isfinite(err)));
 
 fprintf('ok\nTest: lambda-batch solver ... ');
-lambdaBatch = logspace(-3, 2, 5)';
-nuBatch     = logspace(-3, 2, 2)';
-gridBatch   = buffer.geometricGrid(1e-3, 1e2, 60);
+lambdaBatch = logspace(-3, 2, 100)';
+nuBatch     = logspace(-3, 2, 100)';
+gridBatch   = buffer.geometricGrid(1e-3, 1e2, 100);
 b0Batch = buffer.generateB0Grid(lambdaBatch, nuBatch, 1, ...
     'GridSize', 60, 'Tolerance', 1e-6, 'Verbose', false);
 bBatch = buffer.solveGeometricLambdaGrid( ...
     b0Batch, lambdaBatch, nuBatch, 1, gridBatch, ...
     'Tolerance', 1e-3, 'MaxIterations', 200, 'Verbose', false);
-assert(isequal(size(bBatch), [60, 5, 2]));
+assert(isequal(size(bBatch), [100, 100, 100]));
 assert(all(isfinite(bBatch), 'all'));
 F = buffer.residualGeometricLambda(bBatch(:, :, 1), gridBatch.r, ...
     gridBatch.hLeft, gridBatch.hRight, b0Batch(:, 1).', ...
     lambdaBatch, nuBatch(1), 1);
-assert(max(abs(F), [], 'all') < 1e-2);
+assert(max(abs(F), [], 'all') < 1e-4);
 
 approxBatch = buffer.approximationsGrid(gridBatch.r, lambdaBatch, nuBatch, 1, ...
     {'Pade2', 'RBA2', 'DblExpGlobal'}, ...
     'PadeRefine', true, 'PadeRefineMethod', 'newton', ...
     'PadeRealCoefficients', true);
-assert(isequal(size(approxBatch.pade2), [60, 5, 2]));
+assert(isequal(size(approxBatch.pade2), [100,100,100]));
 fprintf('ok\n');
 fprintf('Test: all checks passed.\n');

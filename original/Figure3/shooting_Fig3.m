@@ -1,5 +1,9 @@
 clear; clc;
-
+%%
+% Fig2_A: lambda = 0.1, nu = 0.1
+% Fig2_B: lambda = 0.1, nu = 10
+% Fig2_C: lambda = 1, nu = 10
+%%
 lambda = 1;
 nu = 10;
 eta = 1;
