@@ -25,4 +25,4 @@ run('Figure1/figure1A.m')
 
 ## Notes
 
--  The current code framework was generated with assistance from DeepSeek-V4.1-flash 1017. For reference, the original handwritten implementation is available in the `original`.
+-  The current code framework was generated with assistance from `DeepSeek-V4.1-flash 1017`. For reference, the original handwritten implementation is available in the `original`.
