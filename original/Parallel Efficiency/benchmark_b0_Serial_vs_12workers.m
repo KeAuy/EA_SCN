@@ -1,7 +1,5 @@
 clear; clc; close all;
-%% 1. Configuration
-externalRoot = 'F:\EA_SCN-main';
-addpath(externalRoot);
+%% Configuration
 
 nLambda = 100;
 nNu     = 100;
@@ -15,6 +13,7 @@ nuValues     = logspace(-3, 2, nNu)';
 workersList  = [1 2 4 8 12];
 nRepeats     = 3;
 
+%%
 outDir = fileparts(mfilename('fullpath'));
 cacheFile  = fullfile(outDir, 'benchmark_b0_100x100.mat');
 
@@ -33,5 +32,5 @@ if isfile(cacheFile)
         fprintf('Loaded cached results from: %s\n', cacheFile);
         reportGenerationResults(S.results);
         return
-    else
+    end
 end
