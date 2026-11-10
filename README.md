@@ -49,7 +49,7 @@ run('Figure1/figure1A.m')
 |8|24.500|4.520×|56.5%|12.66|8|
 |12|21.432|5.167×|43.1%|17.04|12|
 
-Source code and data can be found at this path:`original\Parallel Efficiency`
+Source code and data can be found at this path:`original/Parallel Efficiency`
 
 ## Notes
 
